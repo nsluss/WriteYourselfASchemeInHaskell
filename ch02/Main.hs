@@ -46,7 +46,19 @@ parseAtom = do
 parseNumber :: Parser LispVal
 parseNumber = liftM (Number . read) $ many1 digit
 
+--1.1 Rewrite parseNumber, without liftM, using do-notation
+parseNumber' :: Parser LispVal
+parseNumber' = do
+  val <- many1 digit
+  return $ Number (read val)
+
+--1.2 Rewrite parseNumber, without liftM, using explicit sequencing with the
+--  (>>=) operator
+parseNumber'' :: Parser LispVal
+parseNumber'' = many1 digit >>= (return . Number . read)
+
 parseExpr :: Parser LispVal
 parseExpr = parseAtom
          <|> parseString
-         <|> parseNumber
+         <|> parseNumber''
+
