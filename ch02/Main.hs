@@ -1,3 +1,4 @@
+{-#LANGUAGE FlexibleContexts#-}
 import Text.ParserCombinators.Parsec hiding (spaces)
 import System.Environment
 import Control.Monad
@@ -28,10 +29,14 @@ data LispVal = Atom String
 
 parseString :: Parser LispVal
 parseString = do
-  char '"'
-  x <- many (noneOf "\"")
-  char '"'
-  return $ String x
+    char '"'
+    x <- many $ escaped <|> noneOf "\""
+    char '"'
+    return $ String x
+  where escaped = char '\\' >> choice (zipWith escapedChar codes replacements)
+        escapedChar code replacement = char code >> return replacement
+        codes =        ['b',  'n',  'f',  'r',  't',  '\\', '\"', '/']
+        replacements = ['\b', '\n', '\f', '\r', '\t', '\\', '\"', '/']
 
 parseAtom :: Parser LispVal
 parseAtom = do
@@ -60,5 +65,5 @@ parseNumber'' = many1 digit >>= (return . Number . read)
 parseExpr :: Parser LispVal
 parseExpr = parseAtom
          <|> parseString
-         <|> parseNumber''
+         <|> parseNumber
 
